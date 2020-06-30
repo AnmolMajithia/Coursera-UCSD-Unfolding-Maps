@@ -1,5 +1,6 @@
 package module6;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +42,8 @@ public class EarthquakeCityMap extends PApplet {
 	/** This is where to find the local tiles, for working without an Internet connection */
 	public static String mbTilesString = "blankLight-1-3.mbtiles";
 	
-	
-
+	CountryCorona cc = new CountryCorona();
+	String countryCorona = "";
 	//feed with magnitude 2.5+ Earthquakes
 	private String earthquakesURL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.atom";
 	
@@ -134,7 +135,7 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
-		
+		addCoronaStatus();
 	}
 	
 	
@@ -206,20 +207,26 @@ public class EarthquakeCityMap extends PApplet {
 		{
 			checkEarthquakesForClick();
 			if (lastClicked == null) {
-				checkCitiesForClick();
+				try {
+					checkCitiesForClick();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
 	
 	// Helper method that will check if a city marker was clicked on
 	// and respond appropriately
-	private void checkCitiesForClick()
-	{
+	private void checkCitiesForClick() throws IOException {
 		if (lastClicked != null) return;
 		// Loop over the earthquake markers to see if one of them is selected
 		for (Marker marker : cityMarkers) {
 			if (!marker.isHidden() && marker.isInside(map, mouseX, mouseY)) {
 				lastClicked = (CommonMarker)marker;
+				countryCorona = marker.getStringProperty("country");
+				new CoronaCases().fetchData(cc, countryCorona);
+//				addCoronaStatus();
 				// Hide all the other earthquakes and hide
 				for (Marker mhide : cityMarkers) {
 					if (mhide != lastClicked) {
@@ -274,6 +281,27 @@ public class EarthquakeCityMap extends PApplet {
 		for(Marker marker : cityMarkers) {
 			marker.setHidden(false);
 		}
+	}
+
+	private void addCoronaStatus() {
+//		fill(255, 250, 240);
+
+		int xbase = 25;
+		int ybase = 300;
+
+//		rect(xbase, ybase, 150, 600);
+
+		fill(255,255,255);
+//		textAlign(LEFT, CENTER);
+//		textSize(12);
+		text("Country : ", xbase+25, ybase+25);
+		text(countryCorona, xbase+25, ybase+50);
+		text("Confirmed:"+cc.confirmed, xbase+25, ybase+75);
+		text("Deaths:"+cc.deaths, xbase+25, ybase+100);
+		text("Recovered:"+cc.recovered, xbase+25, ybase+125);
+		text("Active:"+cc.active, xbase+25, ybase+150);
+		text("Date:"+cc.date, xbase+25, ybase+175);
+
 	}
 	
 	// helper method to draw key in GUI
